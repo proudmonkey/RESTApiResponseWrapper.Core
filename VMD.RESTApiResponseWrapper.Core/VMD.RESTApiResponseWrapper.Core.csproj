@@ -5,6 +5,11 @@
     <Authors>Vincent Maverick Durano</Authors>
     <Description>A REST API global exception handler and response wrapper for ASP.NET Core APIs</Description>
     <PackageLicenseUrl>https://opensource.org/licenses/MS-PL</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/proudmonkey/RESTApiResponseWrapper.Core</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/proudmonkey/RESTApiResponseWrapper.Core</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <Version>1.0.1</Version>
+    <PackageTags>RESTAPI, Web API 2, ASP.NET Core</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
