@@ -9,10 +9,13 @@ namespace VMD.RESTApiResponseWrapper.Core.Wrappers
     public class APIResponse
     {
         [DataMember]
-        public string Version { get { return "1.0.0"; } }
+        public string Version { get; set; }
 
         [DataMember]
         public int StatusCode { get; set; }
+
+        [DataMember]
+        public string Message { get; set; }
 
         [DataMember(EmitDefaultValue = false)]
         public ApiError ResponseException { get; set; }
@@ -20,11 +23,13 @@ namespace VMD.RESTApiResponseWrapper.Core.Wrappers
         [DataMember(EmitDefaultValue = false)]
         public object Result { get; set; }
 
-        public APIResponse(int statusCode, object result = null, ApiError apiError = null)
+        public APIResponse(int statusCode, string message = "", object result = null, ApiError apiError = null, string apiVersion = "1.0.0.0")
         {
-            StatusCode = statusCode;
-            Result = result;
-            ResponseException = apiError;
+            this.StatusCode = statusCode;
+            this.Message = message;
+            this.Result = result;
+            this.ResponseException = apiError;
+            this.Version = apiVersion;
         }
     }
 }

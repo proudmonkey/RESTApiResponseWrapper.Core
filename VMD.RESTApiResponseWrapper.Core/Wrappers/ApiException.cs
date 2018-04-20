@@ -10,13 +10,20 @@ namespace VMD.RESTApiResponseWrapper.Core.Wrappers
 
         public IEnumerable<ValidationError> Errors { get; set; }
 
+        public string ReferenceErrorCode { get; set; }
+        public string ReferenceDocumentLink { get; set; }
+
         public ApiException(string message,
                             int statusCode = 500,
-                            IEnumerable<ValidationError> errors = null) :
+                            IEnumerable<ValidationError> errors = null,
+                            string errorCode = "",
+                            string refLink = "") :
             base(message)
         {
-            StatusCode = statusCode;
-            Errors = errors;
+            this.StatusCode = statusCode;
+            this.Errors = errors;
+            this.ReferenceErrorCode = errorCode;
+            this.ReferenceDocumentLink = refLink;
         }
 
         public ApiException(System.Exception ex, int statusCode = 500) : base(ex.Message)

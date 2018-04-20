@@ -3,13 +3,18 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <Authors>Vincent Maverick Durano</Authors>
-    <Description>A REST API global exception handler and response wrapper for ASP.NET Core APIs</Description>
+    <Description>A REST API global exception handler and response wrapper for ASP.NET Core APIs.</Description>
     <PackageLicenseUrl>https://opensource.org/licenses/MS-PL</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/proudmonkey/RESTApiResponseWrapper.Core</PackageProjectUrl>
     <RepositoryUrl>https://github.com/proudmonkey/RESTApiResponseWrapper.Core</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
-    <Version>1.0.1</Version>
-    <PackageTags>RESTAPI, Web API 2, ASP.NET Core</PackageTags>
+    <Version>1.0.2</Version>
+    <PackageTags>REST,API, WebAPI2, ASP.NETCore,Middleware, ResponseWrapper</PackageTags>
+    <PackageReleaseNotes>-handle successful request and build a response object from it for consistency
+-added some optional parameters when throwing your own exception
+-added Message field at the top root of the response object
+-added readme.txt
+-minor code enhancements</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
