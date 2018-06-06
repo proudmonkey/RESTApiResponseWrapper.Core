@@ -10,12 +10,12 @@ namespace VMD.RESTApiResponseWrapper.Core.Wrappers
         [Description("Request successful.")]
         Success,
         [Description("Request responded with exceptions.")]
-        Failure,
+        Exception,
         [Description("Request denied.")]
-        Information,
+        UnAuthorized,
         [Description("Request responded with validation error(s).")]
-        Warning,
+        ValidationError,
         [Description("Unable to process the request.")]
-        General
+        Failure
     }
 }

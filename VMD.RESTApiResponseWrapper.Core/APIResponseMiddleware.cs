@@ -20,39 +20,43 @@ namespace VMD.RESTApiResponseWrapper.Core
 
         public async Task Invoke(HttpContext context)
         {
-
-            var originalBodyStream = context.Response.Body;
-            //context.Request.EnableRewind();
-
-            using (var responseBody = new MemoryStream())
+            if (IsSwagger(context))
+                await this._next(context);
+            else
             {
-                context.Response.Body = responseBody;
+                var originalBodyStream = context.Response.Body;
 
-                try
+                using (var responseBody = new MemoryStream())
                 {
-                    await _next.Invoke(context);
+                    context.Response.Body = responseBody;
 
-                    if (context.Response.StatusCode == (int)HttpStatusCode.OK)
+                    try
                     {
-                        var body = await FormatResponse(context.Response);
-                        await HandleSuccessRequestAsync(context, body, context.Response.StatusCode);
+                        await _next.Invoke(context);
 
+                        if (context.Response.StatusCode == (int)HttpStatusCode.OK)
+                        {
+                            var body = await FormatResponse(context.Response);
+                            await HandleSuccessRequestAsync(context, body, context.Response.StatusCode);
+
+                        }
+                        else
+                        {
+                            await HandleNotSuccessRequestAsync(context, context.Response.StatusCode);
+                        }
                     }
-                    else
+                    catch (System.Exception ex)
                     {
-                        await HandleNotSuccessRequestAsync(context, context.Response.StatusCode);
+                        await HandleExceptionAsync(context, ex);
                     }
-                }
-                catch (System.Exception ex)
-                {
-                    await HandleExceptionAsync(context, ex);
-                }
-                finally
-                {
-                    responseBody.Seek(0, SeekOrigin.Begin);
-                    await responseBody.CopyToAsync(originalBodyStream);
+                    finally
+                    {
+                        responseBody.Seek(0, SeekOrigin.Begin);
+                        await responseBody.CopyToAsync(originalBodyStream);
+                    }
                 }
             }
+
         }
 
         private static Task HandleExceptionAsync(HttpContext context, System.Exception exception)
@@ -63,24 +67,23 @@ namespace VMD.RESTApiResponseWrapper.Core
 
             if (exception is ApiException)
             {
-                // handle explicit 'known' API errors
                 var ex = exception as ApiException;
                 apiError = new ApiError(ex.Message);
-                code = ex.StatusCode;
                 apiError.ValidationErrors = ex.Errors;
+                apiError.ReferenceErrorCode = ex.ReferenceErrorCode;
+                apiError.ReferenceDocumentLink = ex.ReferenceDocumentLink;
+                code = ex.StatusCode;
                 context.Response.StatusCode = code;
+
             }
             else if (exception is UnauthorizedAccessException)
             {
                 apiError = new ApiError("Unauthorized Access");
                 code = (int)HttpStatusCode.Unauthorized;
                 context.Response.StatusCode = code;
-
-                // handle logging here
             }
             else
             {
-                // Unhandled errors
 #if !DEBUG
                 var msg = "An unhandled error occurred.";
                 string stack = null;
@@ -93,13 +96,11 @@ namespace VMD.RESTApiResponseWrapper.Core
                 apiError.Details = stack;
                 code = (int)HttpStatusCode.InternalServerError;
                 context.Response.StatusCode = code;
-
-                // handle logging here
             }
 
             context.Response.ContentType = "application/json";
 
-            apiResponse = new APIResponse(code, ResponseMessageEnum.Failure.GetDescription(), null, apiError);
+            apiResponse = new APIResponse(code, ResponseMessageEnum.Exception.GetDescription(), null, apiError);
 
             var json = JsonConvert.SerializeObject(apiResponse);
 
@@ -120,7 +121,7 @@ namespace VMD.RESTApiResponseWrapper.Core
             else
                 apiError = new ApiError("Your request cannot be processed. Please contact a support.");
 
-            apiResponse = new APIResponse(code, ResponseMessageEnum.General.GetDescription(), null, apiError);
+            apiResponse = new APIResponse(code, ResponseMessageEnum.Failure.GetDescription(), null, apiError);
             context.Response.StatusCode = code;
 
             var json = JsonConvert.SerializeObject(apiResponse);
@@ -174,6 +175,12 @@ namespace VMD.RESTApiResponseWrapper.Core
             response.Body.Seek(0, SeekOrigin.Begin);
 
             return plainBodyText;
+        }
+
+        private bool IsSwagger(HttpContext context)
+        {
+            return context.Request.Path.StartsWithSegments("/swagger");
+
         }
 
     }
