@@ -190,7 +190,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 
 
-##Further Readings: 
+## Further Readings: 
 
 * [ASP.NET Core and Web API: A Custom Wrapper for Managing Exceptions and Consistent Responses](http://vmsdurano.com/asp-net-core-and-web-api-a-custom-wrapper-for-managing-exceptions-and-consistent-responses/)
 * [ASP.NET Core 2.1: Integrating VMD.RESTApiResponseWrapper.Core to Your REST API Application](http://vmsdurano.com/asp-net-core-2-1-integrating-vmd-restapiresponsewrapper-core-to-your-rest-api-application/)
