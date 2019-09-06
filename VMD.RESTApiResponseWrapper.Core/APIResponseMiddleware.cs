@@ -6,15 +6,19 @@ using Newtonsoft.Json;
 using VMD.RESTApiResponseWrapper.Core.Wrappers;
 using VMD.RESTApiResponseWrapper.Core.Extensions;
 using System.IO;
+using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace VMD.RESTApiResponseWrapper.Core
 {
     public class APIResponseMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ILogger<APIResponseMiddleware> _logger;
 
-        public APIResponseMiddleware(RequestDelegate next)
+        public APIResponseMiddleware(RequestDelegate next, ILogger<APIResponseMiddleware> logger)
         {
+            _logger = logger;
             _next = next;
         }
 
@@ -26,19 +30,20 @@ namespace VMD.RESTApiResponseWrapper.Core
             {
                 var originalBodyStream = context.Response.Body;
 
-                using (var responseBody = new MemoryStream())
-                {
-                    context.Response.Body = responseBody;
 
+                using (var bodyStream = new MemoryStream())
+                {
                     try
                     {
+                        context.Response.Body = bodyStream;
+
                         await _next.Invoke(context);
 
+                        context.Response.Body = originalBodyStream;
                         if (context.Response.StatusCode == (int)HttpStatusCode.OK)
                         {
-                            var body = await FormatResponse(context.Response);
-                            await HandleSuccessRequestAsync(context, body, context.Response.StatusCode);
-
+                            var bodyAsText = await FormatResponse(bodyStream);
+                            await HandleSuccessRequestAsync(context, bodyAsText, context.Response.StatusCode);
                         }
                         else
                         {
@@ -48,15 +53,23 @@ namespace VMD.RESTApiResponseWrapper.Core
                     catch (System.Exception ex)
                     {
                         await HandleExceptionAsync(context, ex);
-                    }
-                    finally
-                    {
-                        responseBody.Seek(0, SeekOrigin.Begin);
-                        await responseBody.CopyToAsync(originalBodyStream);
+                        bodyStream.Seek(0, SeekOrigin.Begin);
+                        await bodyStream.CopyToAsync(originalBodyStream);
                     }
                 }
+
+
             }
 
+        }
+
+        private async Task<string> FormatResponse(Stream bodyStream)
+        {
+            bodyStream.Seek(0, SeekOrigin.Begin);
+            var plainBodyText = await new StreamReader(bodyStream).ReadToEndAsync();
+            bodyStream.Seek(0, SeekOrigin.Begin);
+
+            return plainBodyText;
         }
 
         private static Task HandleExceptionAsync(HttpContext context, System.Exception exception)
@@ -112,7 +125,6 @@ namespace VMD.RESTApiResponseWrapper.Core
             context.Response.ContentType = "application/json";
 
             ApiError apiError = null;
-            APIResponse apiResponse = null;
 
             if (code == (int)HttpStatusCode.NotFound)
                 apiError = new ApiError("The specified URI does not exist. Please verify and try again.");
@@ -121,10 +133,10 @@ namespace VMD.RESTApiResponseWrapper.Core
             else
                 apiError = new ApiError("Your request cannot be processed. Please contact a support.");
 
-            apiResponse = new APIResponse(code, ResponseMessageEnum.Failure.GetDescription(), null, apiError);
+            APIResponse apiResponse = new APIResponse(code, ResponseMessageEnum.Failure.GetDescription(), null, apiError);
             context.Response.StatusCode = code;
 
-            var json = JsonConvert.SerializeObject(apiResponse);
+            var json = ConvertToJSONString(apiResponse);
 
             return context.Response.WriteAsync(json);
         }
@@ -132,49 +144,41 @@ namespace VMD.RESTApiResponseWrapper.Core
         private static Task HandleSuccessRequestAsync(HttpContext context, object body, int code)
         {
             context.Response.ContentType = "application/json";
-            string jsonString, bodyText = string.Empty;
-            APIResponse apiResponse = null;
+            string jsonString = string.Empty;
 
-
-            if (!body.ToString().IsValidJson())
-                bodyText = JsonConvert.SerializeObject(body);
-            else
-                bodyText = body.ToString();
+            var bodyText = !body.ToString().IsValidJson() ? ConvertToJSONString(body) : body.ToString();
 
             dynamic bodyContent = JsonConvert.DeserializeObject<dynamic>(bodyText);
-            Type type;
-
-            type = bodyContent?.GetType();
+            Type type = bodyContent?.GetType();
 
             if (type.Equals(typeof(Newtonsoft.Json.Linq.JObject)))
             {
-                apiResponse = JsonConvert.DeserializeObject<APIResponse>(bodyText);
-                if (apiResponse.StatusCode != code)
-                    jsonString = JsonConvert.SerializeObject(apiResponse);
-                else if (apiResponse.Result != null)
-                    jsonString = JsonConvert.SerializeObject(apiResponse);
+                APIResponse apiResponse = JsonConvert.DeserializeObject<APIResponse>(bodyText);
+                if (apiResponse.StatusCode != code || apiResponse.Result != null)
+                    jsonString = ConvertToJSONString(apiResponse);
                 else
-                {
-                    apiResponse = new APIResponse(code, ResponseMessageEnum.Success.GetDescription(), bodyContent, null);
-                    jsonString = JsonConvert.SerializeObject(apiResponse);
-                }
+                    jsonString = ConvertToJSONString(code, bodyContent);
             }
             else
             {
-                apiResponse = new APIResponse(code, ResponseMessageEnum.Success.GetDescription(), bodyContent, null);
-                jsonString = JsonConvert.SerializeObject(apiResponse);
+                jsonString = ConvertToJSONString(code, bodyContent);
             }
 
             return context.Response.WriteAsync(jsonString);
         }
 
-        private async Task<string> FormatResponse(HttpResponse response)
+        private static string ConvertToJSONString(int code, object content)
         {
-            response.Body.Seek(0, SeekOrigin.Begin);
-            var plainBodyText = await new StreamReader(response.Body).ReadToEndAsync();
-            response.Body.Seek(0, SeekOrigin.Begin);
+            return JsonConvert.SerializeObject(new APIResponse(code, ResponseMessageEnum.Success.GetDescription(), content, null));
+        }
+        private static string ConvertToJSONString(APIResponse apiResponse)
+        {
+            return JsonConvert.SerializeObject(apiResponse);
+        }
 
-            return plainBodyText;
+        private static string ConvertToJSONString(object rawJSON)
+        {
+            return JsonConvert.SerializeObject(rawJSON);
         }
 
         private bool IsSwagger(HttpContext context)
