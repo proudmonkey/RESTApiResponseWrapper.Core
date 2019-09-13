@@ -1,10 +1,10 @@
-# VMD.RESTApiResponseWrapper.Core 
+# VMD.RESTApiResponseWrapper.Core Version 2.x
 
 The VMD.RESTApiResponseWrapper.Core is a global exception handler and response wrapper for ASP.NET Core APIs. It uses a middleware to capture exceptions and to capture HTTP response to build a consistent response object for both successful and error requests.
 
 ## Prerequisite
 
-Install Newtonsog.Json package
+Install Newtonsoft.Json package
 
 ## Installing
 
@@ -12,16 +12,22 @@ Below are the steps to use the VMD.RESTApiResponseWrapper.Core middleware into y
 
 1) Declare the following namespace within Startup.cs
 
-using VMD.RESTApiResponseWrapper.Core.Extensions;
+using VMD.RESTApiResponseWrapper.Core;
 
 2) Register the middleware below within the Configure() method of Startup.cs
 
-  app.UseAPIResponseWrapperMiddleware();
+  app.UseApiResponseAndExceptionWrapper();
 
-Note: Make sure to register it "before" the MVC middleware
+  The default version format is "1.0.0.0". If you wish to specify the version for your API, then you can do:
+
+  app.UseApiResponseAndExceptionWrapper(new ApiResponseOptions { ApiVersion = "2.0" });
+
+Note: Make sure to register it "before" the UseRouting() middleware
 
 3) Done. 
 
+
+Once you have configured the middleware, you can then start using the Api
 
 ## Sample Output 
 
@@ -32,15 +38,12 @@ Here's the format for successful request with data:
 ```
 {
     
-	"Version": "1.0.0.0",
-    
-	"StatusCode": 200,
-    
-	"Message": "Request successful.",
-    
-	"Result": [
+    "version": "1.0.0.0",
+    "statusCode": 200,
+    "message": "Request successful.",
+    "isError": false,
+	"result": [
 		"value1",
-        
 		"value2"
 	]
 
@@ -53,11 +56,10 @@ Here's the format for successful request without data:
 ```
 {
     
-	"Version": "1.0.0.0",
-    
-	"StatusCode": 201,
-    
-	"Message": "Student with ID 6 has been created."
+	"version": "1.0.0.0",
+    "statusCode": 201,
+    "message": "Object has been created.",
+    "isError": false,
 
 }
 ```
@@ -67,20 +69,12 @@ Here's the format for error request with validation errors:
 ```
 {
     
-	"Version": "1.0.0.0",
-    
-	"StatusCode": 400,
-    
-	"Message": "Request responded with exceptions.",
-    
-	"ResponseException": {
-        
-		"IsError": true,
-        
+	"version": "1.0.0.0",
+    "statusCode": 400,
+    "isError": true,
+	"responseException": {
 		"ExceptionMessage": "Validation Field Error.",
-        
 		"Details": null,
-        
 		"ReferenceErrorCode": null,
         
 		"ReferenceDocumentLink": null,
@@ -113,30 +107,26 @@ Here's the format for error request
 
 ```
 {
-    
-	"Version": "1.0.0.0",
-    
-	"StatusCode": 404,
-    
-	"Message": "Unable to process the request.",
-    
-	"ResponseException": {
-        
-		"IsError": true,
-        
-		"ExceptionMessage": "The specified URI does not exist. Please verify and try again.",
-
-	        "Details": null,
-        
-		"ReferenceErrorCode": null,
-        
-		"ReferenceDocumentLink": null,
-        
-		"ValidationErrors": null
-    
-	}
-
-} 
+    "version": "1.0.0.0",
+    "statusCode": 400,
+    "isError": true,
+    "responseException": {
+        "exceptionMessage": "Request responded with validation error(s). Please correct the specified validation errors and try again.",
+        "details": null,
+        "referenceErrorCode": null,
+        "referenceDocumentLink": null,
+        "validationErrors": [
+            {
+                "field": "LastName",
+                "message": "'Last Name' must not be empty."
+            },
+            {
+                "field": "FirstName",
+                "message": "'First Name' must not be empty."
+            }
+        ]
+    }
+}
 ```  
           
  
@@ -146,36 +136,37 @@ Here's the format for error request
 This library isn't just a middleware, it also provides some objects that you can use for defining your own exception. For example, if you want to throw your own exception message, you could simply do:
 
 ```
-throw new ApiException("Your Message",401, ModelStateExtension.AllErrors(ModelState));
+//for capturing ModelState validation errors
+throw new ApiException(ModelState.AllErrors());
+
+//for throwing your own exception message
+throw new ApiException($"Record with id: {id} does not exist.", 400);
 ```
 
-The ApiException has the following parameters that you can set:
+The ApiException object contains the following three overload constructors that you can use to define an exception:
 
 ```
-ApiException(string message,
-             int statusCode = 500,
-             IEnumerable<ValidationError> errors = null, 
-             string errorCode = "", 
-             string refLink = "")
+ApiException(string message, int statusCode = 500, string errorCode = "", string refLink = "")
+
+ApiException(IEnumerable<ValidationError> errors, int statusCode = 400)
+
+ApiException(System.Exception ex, int statusCode = 500)
+
 ```
 
 
 ## Defining Your Own Response Object
 
-Aside from throwing your own custom exception, You could also return your own custom defined Response json by using the ApiResponse object in your API controller. For example:
+Aside from throwing your own custom exception, You could also return your own custom defined JSON Response  by using the ApiResponse object in your API controller. For example:
 
 ```
-return new APIResponse(201,"Created");
+return new ApiResponse("Created Successfully.", true, 201);
 ```
 
 The APIResponse has the following parameters:
 
 ```
-APIResponse(int statusCode, 
-	    string message = "", 
-	    object result = null, 
-            ApiError apiError = null, 
-            string apiVersion = "1.0.0.0")
+ApiResponse(string message, object result = null, int statusCode = 200, string apiVersion = "1.0.0.0")
 ```
 
 ## Source Code

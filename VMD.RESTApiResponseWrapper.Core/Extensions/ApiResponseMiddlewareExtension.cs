@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using System;
 
-namespace VMD.RESTApiResponseWrapper.Core.Extensions
+namespace VMD.RESTApiResponseWrapper.Core
 {
     public static class ApiResponseMiddlewareExtension
     {
-        public static IApplicationBuilder UseAPIResponseWrapperMiddleware(this IApplicationBuilder builder)
+        public static IApplicationBuilder UseApiResponseAndExceptionWrapper(this IApplicationBuilder builder, ApiResponseOptions options = default)
         {
-            return builder.UseMiddleware<APIResponseMiddleware>();
+            options ??= new ApiResponseOptions();
+            return builder.UseMiddleware<ApiResponseMiddleware>(options);
         }
     }
 }

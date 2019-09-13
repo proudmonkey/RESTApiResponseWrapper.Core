@@ -1,14 +1,11 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace VMD.RESTApiResponseWrapper.Core.Extensions
 {
     public static class StringExtension
     {
-
         public static bool IsValidJson(this string text)
         {
             text = text.Trim();

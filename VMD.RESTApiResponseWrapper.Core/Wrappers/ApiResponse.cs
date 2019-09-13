@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Text;
 namespace VMD.RESTApiResponseWrapper.Core.Wrappers
 {
     [DataContract]
-    public class APIResponse
+    public class ApiResponse
     {
         [DataMember]
         public string Version { get; set; }
@@ -14,8 +15,11 @@ namespace VMD.RESTApiResponseWrapper.Core.Wrappers
         [DataMember]
         public int StatusCode { get; set; }
 
-        [DataMember]
+        [DataMember(EmitDefaultValue = false)]
         public string Message { get; set; }
+
+        [DataMember]
+        public bool IsError { get; set; }
 
         [DataMember(EmitDefaultValue = false)]
         public ApiError ResponseException { get; set; }
@@ -23,13 +27,21 @@ namespace VMD.RESTApiResponseWrapper.Core.Wrappers
         [DataMember(EmitDefaultValue = false)]
         public object Result { get; set; }
 
-        public APIResponse(int statusCode, string message = "", object result = null, ApiError apiError = null, string apiVersion = "1.0.0.0")
+        [JsonConstructor]
+        public ApiResponse(string message, object result = null, int statusCode = 200, string apiVersion = "1.0.0.0")
         {
             this.StatusCode = statusCode;
             this.Message = message;
             this.Result = result;
-            this.ResponseException = apiError;
             this.Version = apiVersion;
+            this.IsError = false;
+        }
+
+        public ApiResponse(int statusCode , ApiError apiError)
+        {
+            this.StatusCode = statusCode;
+            this.ResponseException = apiError;
+            this.IsError = true;
         }
     }
 }

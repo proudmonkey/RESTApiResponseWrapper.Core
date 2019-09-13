@@ -1,12 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 namespace VMD.RESTApiResponseWrapper.Core.Wrappers
 {
     public class ApiError
     {
-        public bool IsError { get; set; }
         public string ExceptionMessage { get; set; }
         public string Details { get; set; }
         public string ReferenceErrorCode { get; set; }
@@ -16,20 +13,13 @@ namespace VMD.RESTApiResponseWrapper.Core.Wrappers
         public ApiError(string message)
         {
             this.ExceptionMessage = message;
-            this.IsError = true;
         }
 
-        public ApiError(ModelStateDictionary modelState)
+        public ApiError(string message, IEnumerable<ValidationError> validationErrors)
         {
-            this.IsError = true;
-            if (modelState != null && modelState.Any(m => m.Value.Errors.Count > 0))
-            {
-                this.ExceptionMessage = "Please correct the specified validation errors and try again.";
-                this.ValidationErrors = modelState.Keys
-                .SelectMany(key => modelState[key].Errors.Select(x => new ValidationError(key, x.ErrorMessage)))
-                .ToList();
+            this.ExceptionMessage = message;
+            this.ValidationErrors = validationErrors;
 
-            }
         }
     }
 }
