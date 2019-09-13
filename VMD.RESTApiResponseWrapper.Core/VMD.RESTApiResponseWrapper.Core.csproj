@@ -4,17 +4,19 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <Authors>Vincent Maverick Durano</Authors>
     <Description>A REST API global exception handler and response wrapper for ASP.NET Core APIs.</Description>
-    <PackageLicenseUrl>https://opensource.org/licenses/MS-PL</PackageLicenseUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/proudmonkey/RESTApiResponseWrapper.Core</PackageProjectUrl>
     <RepositoryUrl>https://github.com/proudmonkey/RESTApiResponseWrapper.Core</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
-    <Version>1.0.2</Version>
-    <PackageTags>REST,API, WebAPI2, ASP.NETCore,Middleware, ResponseWrapper</PackageTags>
-    <PackageReleaseNotes>-handle successful request and build a response object from it for consistency
--added some optional parameters when throwing your own exception
--added Message field at the top root of the response object
--added readme.txt
--minor code enhancements</PackageReleaseNotes>
+    <Version>2.0.0-rc</Version>
+    <PackageTags>REST,API, WebAPI, ASP.NETCore,Middleware, Wrapper, ApiResponseAndExceptionWrapper</PackageTags>
+    <PackageReleaseNotes>[RFT] Refactor code to fix previous version issues.
+[FET] Add Support for ASP.NET / .NET Core 3.x
+[FET] Enable Logging using ILogger for Request, Response and Exceptions
+[FET] Add options in the middleware to set API version
+[FIX]  Enable Camel case for JSON output format</PackageReleaseNotes>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
