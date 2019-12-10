@@ -1,5 +1,5 @@
 # This is Deprecated! 
-This package is no longer maintained. Please use [AutoWrapper](https://github.com/proudmonkey/AutoWrapper) moving forward.
+This project is no longer maintained. Please use [AutoWrapper](https://github.com/proudmonkey/AutoWrapper) moving forward.
 
 # RESTApiResponseWrapper.Core
 A REST API global exception handler and response wrapper for ASP.NET Core APIs.
