@@ -1,4 +1,4 @@
-# This is Deprecated! 
+# WARNNING: This is Deprecated and no longer Maintained! 
 This project is no longer active and maintained. Please use [AutoWrapper](https://github.com/proudmonkey/AutoWrapper) moving forward.
 
 # RESTApiResponseWrapper.Core
